@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "date-fns": "^2.29.2",
-    "esbuild": "^0.15.5",
     "ics": "^2.37.0",
     "jquery": "^3.6.0"
   },
@@ -16,6 +15,7 @@
   "description": "",
   "devDependencies": {
     "@types/jquery": "^3.5.14",
+    "esbuild": "^0.15.5",
     "esbuild-copy-static-files": "^0.1.0"
   }
 }
