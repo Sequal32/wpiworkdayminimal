@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "date-fns": "^2.29.2",
+    "esbuild": "^0.15.5",
+    "ics": "^2.37.0",
+    "jquery": "^3.6.0"
+  },
+  "name": "workdayics",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/jquery": "^3.5.14",
+    "esbuild-copy-static-files": "^0.1.0"
+  }
+}
