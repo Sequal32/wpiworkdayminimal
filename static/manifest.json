@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Workday To ICS",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Converts workday schedule to an ICS file.",
   "content_scripts": [
     {
