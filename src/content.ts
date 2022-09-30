@@ -1,7 +1,13 @@
 import jquery from "jquery";
-import { add, format, intervalToDuration, parse } from "date-fns";
+import { add, format, intervalToDuration, parse, nextDay } from "date-fns";
 import { createEvents, EventAttributes, ReturnObject } from "ics";
-import { MeetingPattern, Section, sleep, weekdayMap } from "./util";
+import {
+  MeetingPattern,
+  Section,
+  sleep,
+  rRuleWeekdayMap,
+  dayIndexMap,
+} from "./util";
 
 window["$"] = jquery; // for esbuild to bundle jquery
 
@@ -33,7 +39,7 @@ function addNewButton(
 function readSchedule(): Section[] {
   let sections: Section[] = [];
 
-  $(".mainTable tbody tr").each((_, e) => {
+  $("tbody tr").each((_, e) => {
     const columnTexts = $(e)
       .children("td")
       .map((_, e) => $(e).text());
@@ -45,13 +51,18 @@ function readSchedule(): Section[] {
       return;
     }
 
-    section.name = columnTexts[4].trim();
-    section.meetingPattern = new MeetingPattern(columnTexts[7].trim());
-    section.instrutor = columnTexts[9].trim().replace("Instructor", "");
-    section.startDate = parse(columnTexts[10].trim(), "MM/dd/yyyy", new Date());
-    section.endDate = parse(columnTexts[11].trim(), "MM/dd/yyyy", new Date());
-
-    sections.push(section);
+    try {
+      section.name = columnTexts[4].trim();
+      section.meetingPattern = new MeetingPattern(columnTexts[7].trim());
+      section.instrutor = columnTexts[9].trim().replace("Instructor", "");
+      section.startDate = parse(
+        columnTexts[10].trim(),
+        "MM/dd/yyyy",
+        new Date()
+      );
+      section.endDate = parse(columnTexts[11].trim(), "MM/dd/yyyy", new Date());
+      sections.push(section);
+    } catch (error) {}
   });
 
   return sections;
@@ -61,12 +72,18 @@ function createICS(sections: Section[]): ReturnObject {
   let events: EventAttributes[] = [];
 
   sections.forEach((section) => {
-    const startDate = section.startDate;
+    let startDate = section.startDate;
     const endDateRrule = format(add(section.endDate, { days: 1 }), "yyyyMMdd"); // Rrrule stops on this date
     const interval = intervalToDuration({
       start: section.meetingPattern.startTime,
       end: section.meetingPattern.endTime,
     });
+
+    const firstMeetingDay = dayIndexMap[section.meetingPattern.weekdays[0]];
+
+    if (startDate.getDay() !== firstMeetingDay) {
+      startDate = nextDay(startDate, firstMeetingDay);
+    }
 
     events.push({
       title: section.name,
@@ -82,7 +99,7 @@ function createICS(sections: Section[]): ReturnObject {
       duration: { hours: interval.hours, minutes: interval.minutes },
       location: section.meetingPattern.room,
       recurrenceRule: `FREQ=WEEKLY;BYDAY=${section.meetingPattern.weekdays
-        .map((wd) => weekdayMap[wd])
+        .map((wd) => rRuleWeekdayMap[wd])
         .join(",")};UNTIL=${endDateRrule}`,
     });
   });
@@ -108,6 +125,8 @@ function download(filename, text) {
 
 async function setup() {
   const newButton = await waitForViewScheduleButton().then(addNewButton);
+
+  newButton.off();
 
   newButton.on("click", () => {
     const sections = readSchedule();

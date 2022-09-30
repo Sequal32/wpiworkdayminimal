@@ -4,7 +4,7 @@ export function sleep(time) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-export const weekdayMap = {
+export const rRuleWeekdayMap = {
   SU: "SU",
   M: "MO",
   T: "TU",
@@ -12,6 +12,16 @@ export const weekdayMap = {
   R: "TH",
   F: "FR",
   SA: "SA",
+};
+
+export const dayIndexMap = {
+  SU: 0,
+  M: 1,
+  T: 2,
+  W: 3,
+  R: 4,
+  F: 5,
+  SA: 6,
 };
 
 export class MeetingPattern {
