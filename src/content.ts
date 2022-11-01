@@ -94,6 +94,8 @@ function createICS(sections: Section[]): ReturnObject {
         section.meetingPattern.startTime.getHours(),
         section.meetingPattern.startTime.getMinutes(),
       ],
+      startOutputType: "local",
+      endOutputType: "local",
       description:
         section.instrutor !== "" ? `Instructor: ${section.instrutor}` : "",
       duration: { hours: interval.hours, minutes: interval.minutes },
@@ -103,7 +105,6 @@ function createICS(sections: Section[]): ReturnObject {
         .join(",")};UNTIL=${endDateRrule}`,
     });
   });
-
   return createEvents(events);
 }
 
@@ -132,9 +133,7 @@ async function setup() {
     const sections = readSchedule();
 
     if (sections.length == 0) {
-      alert(
-        'No classes found. Did you turn off "Turn off the new tables view?"'
-      );
+      alert("Something went wrong: No classes found.");
       return;
     }
 

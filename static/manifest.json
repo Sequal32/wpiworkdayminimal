@@ -1,8 +1,8 @@
 {
-  "manifest_version": 3,
-  "name": "Workday To ICS",
-  "version": "1.2.0",
-  "description": "Converts workday schedule to an ICS file.",
+  "manifest_version": 2,
+  "name": "WPI Schedule Exporter",
+  "version": "1.2.2",
+  "description": "Converts a WPI workday schedule to an ICS file.",
   "content_scripts": [
     {
       "matches": ["*://wd5.myworkday.com/wpi/*"],
