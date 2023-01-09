@@ -1,5 +1,5 @@
 import jquery from "jquery";
-import { add, format, intervalToDuration, parse, nextDay } from "date-fns";
+import { add, format, intervalToDuration, parse, nextDay, sub } from "date-fns";
 import { createEvents, EventAttributes, ReturnObject } from "ics";
 import {
   MeetingPattern,
@@ -68,29 +68,40 @@ function readSchedule(): Section[] {
   return sections;
 }
 
+function findFirstMeetingDay(
+  startDate: Date,
+  meetingPatternDays: string[]
+): Date {
+  const dayBefore = sub(startDate, { days: 1 });
+  const nextMeetingDays = meetingPatternDays.map((day) =>
+    nextDay(dayBefore, dayIndexMap[day])
+  );
+
+  return nextMeetingDays.sort((a, b) => a.getTime() - b.getTime())[0];
+}
+
 function createICS(sections: Section[]): ReturnObject {
   let events: EventAttributes[] = [];
 
   sections.forEach((section) => {
-    let startDate = section.startDate;
+    const courseStartDate = section.startDate;
     const endDateRrule = format(add(section.endDate, { days: 1 }), "yyyyMMdd"); // Rrrule stops on this date
     const interval = intervalToDuration({
       start: section.meetingPattern.startTime,
       end: section.meetingPattern.endTime,
     });
 
-    const firstMeetingDay = dayIndexMap[section.meetingPattern.weekdays[0]];
-
-    if (startDate.getDay() !== firstMeetingDay) {
-      startDate = nextDay(startDate, firstMeetingDay);
-    }
+    const firstMeetingDate = findFirstMeetingDay(
+      courseStartDate,
+      section.meetingPattern.weekdays
+    );
 
     events.push({
       title: section.name,
       start: [
-        startDate.getFullYear(),
-        startDate.getMonth() + 1,
-        startDate.getDate(),
+        firstMeetingDate.getFullYear(),
+        firstMeetingDate.getMonth() + 1,
+        firstMeetingDate.getDate(),
         section.meetingPattern.startTime.getHours(),
         section.meetingPattern.startTime.getMinutes(),
       ],
