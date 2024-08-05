@@ -7,15 +7,16 @@ import {
   sleep,
   rRuleWeekdayMap,
   dayIndexMap,
+  WPI_WEEKDAY,
 } from "./util";
 
-window["$"] = jquery; // for esbuild to bundle jquery
+(window as any)["$"] = jquery; // for esbuild to bundle jquery
 
 async function waitForViewScheduleButton(): Promise<JQuery<HTMLElement>> {
   while (true) {
     await sleep(1000);
-    const viewScheduleButton = $("button[title='View Schedule']");
-    if (viewScheduleButton.length) {
+    const viewScheduleButton = $("button[title='Calendar View']");
+    if (viewScheduleButton.length > 0) {
       return viewScheduleButton;
     }
   }
@@ -24,14 +25,14 @@ async function waitForViewScheduleButton(): Promise<JQuery<HTMLElement>> {
 function addNewButton(
   viewScheduleButton: JQuery<HTMLElement>
 ): JQuery<HTMLElement> {
-  if ($("#convertToIcsButton").length) {
+  if ($("#convertToIcsButton").length > 0) {
     return $("#convertToIcsButton");
   }
 
   const newButton = viewScheduleButton.clone().insertAfter(viewScheduleButton);
 
   newButton.attr("id", "convertToIcsButton");
-  newButton.find("span[title='View Schedule']").text("Download ICS");
+  newButton.text("Download ICS");
 
   return newButton;
 }
@@ -62,15 +63,19 @@ function readSchedule(): Section[] {
       );
       section.endDate = parse(columnTexts[11].trim(), "MM/dd/yyyy", new Date());
       sections.push(section);
-    } catch (error) {}
+    } catch (e) {
+      alert("Error reading schedule: " + e);
+    }
   });
+
+  console.log(sections);
 
   return sections;
 }
 
 function findFirstMeetingDay(
   startDate: Date,
-  meetingPatternDays: string[]
+  meetingPatternDays: WPI_WEEKDAY[]
 ): Date {
   const dayBefore = sub(startDate, { days: 1 });
   const nextMeetingDays = meetingPatternDays.map((day) =>
@@ -111,15 +116,18 @@ function createICS(sections: Section[]): ReturnObject {
         section.instrutor !== "" ? `Instructor: ${section.instrutor}` : "",
       duration: { hours: interval.hours, minutes: interval.minutes },
       location: section.meetingPattern.room,
-      recurrenceRule: `FREQ=WEEKLY;BYDAY=${section.meetingPattern.weekdays
-        .map((wd) => rRuleWeekdayMap[wd])
+      recurrenceRule: `FREQ=WEEKLY;BYDAY=${section.meetingPattern
+        .getRRuleWeekdays()
         .join(",")};UNTIL=${endDateRrule}`,
     });
   });
+
+  console.log(events);
+
   return createEvents(events);
 }
 
-function download(filename, text) {
+function download(filename: string, text: string) {
   var element = document.createElement("a");
   element.setAttribute(
     "href",
@@ -156,7 +164,7 @@ async function setup() {
         "Keep in mind you will have to make manual adjustments for any days off or special schedules."
       );
     } else {
-      alert("An error occured: " + calendar.error);
+      alert("An error occured: " + calendar.error.message);
     }
   });
 }
